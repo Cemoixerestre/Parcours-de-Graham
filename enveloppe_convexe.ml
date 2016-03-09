@@ -1,4 +1,11 @@
-let min cmp liste =
+
+
+(*mini : ('a -> 'a -> bool) -> 'a list -> 'a
+  mini cmp liste : le mini mum de liste, avec cmp
+  une fonction de comparaison.*)
+let mini cmp liste =
+  (* min' : 'a -> 'a list -> 'a
+  Le mini mum entre r et le mini mun de liste.*)
   let rec min' r liste = match liste with
     |[] -> r
     |t :: q -> if (cmp t r < 0) then min' t q else min' r q
@@ -27,27 +34,22 @@ let norme_carre (x, y) (x', y') =
   dx * dx + dy * dy
 ;;
 
-let compare_angle1 o a b =
+(* compare_angle : int * int -> int * int -> int * int -> int
+  compare_angle O A B : compare si OA est plus à droite que OB, ou
+  si les deux sont colinéaires et que ||OA|| > ||OB||*)
+let compare_angle o a b =
   let det = determinant o a b in
   if det < 0 then 1
   else if det > 0 then -1
   else compare (norme_carre o a) (norme_carre o b)
 ;;
 
-let compare_angle2 o a b =
-  let det = determinant o a b in
-  if det < 0 then 1
-  else if det > 0 then -1
-  else -(compare (norme_carre o a) (norme_carre o b))
-;;
-
-
 (*graham int * int list -> int * int list
   graham l : la liste des sommets de l'enveloppe convexe des
 points de l, en partant du point le plus bas.*)
 let graham liste =
   if liste = [] then [] else
-  let p = min compare_hauteur liste in
+  let p = mini compare_hauteur liste in
   let sliste = List.sort (compare_angle1 p) liste in
   (*add_point : int * int list -> int * int -> int * int list
     add_point evlp p -> si evlp est une enveloppe convexe de points
@@ -56,19 +58,13 @@ let graham liste =
   let rec add_point evlp p = match evlp with
     |b :: a :: q ->
       if determinant a p b >= 0 then add_point (a :: q) p else p :: evlp
+      (*S'il y a un tour à droite, alors on retire le dernier point de
+      l'enveloppe et on continue la recherche. Sinon, on rajoute p à
+      l'enveloppe.*)
     |_ -> p :: evlp
   in
   List.fold_left add_point [] sliste
-;;
-
-let jarvis liste =
-  let rec loop pivot sommet =
-    let suivant = min (compare_angle2 sommet) liste in
-    if suivant = pivot then [sommet] else sommet :: loop pivot suivant
-  in
-  match liste with
-    |[] -> []
-    |_ -> let pivot = min compare_hauteur liste in loop pivot pivot
+  (*On part d'une enveloppe vide, et on ajoute les points de sliste un par un.*)
 ;;
 
 (*Tests :*)
@@ -85,8 +81,4 @@ let print_liste liste =
 print_liste (graham []);;
 print_liste (graham [(0, 0); (0, 1); (1, 0); (1, 1)]);;
 print_liste (graham [(0, 0); (9, 1); (7, 3); (5, 4); (2, 6);
-                                (0, 12)]);;
-print_liste (jarvis []);;
-print_liste (jarvis [(0, 0); (0, 1); (1, 0); (1, 1)]);;
-print_liste (jarvis [(0, 0); (9, 1); (7, 3); (5, 4); (2, 6);
                                 (0, 12)]);;
